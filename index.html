@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>NEON CRAWL | System Breach</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    
+    <meta property="og:title" content="NEON CRAWL">
+    <meta property="og:description" content="I built this Roguelike in 3 hours. Can you breach the system?">
+    <meta property="og:image" content="assets.png">
+    
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
+    <style>
+        body { margin: 0; background: #050505; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
+        canvas { border: 1px solid #0ff; box-shadow: 0 0 30px rgba(0, 255, 255, 0.2); }
+    </style>
+</head>
+<body>
+    <script>
+        // Developer Signature
+        console.log("%c ⚡ NEON CRAWL v1.0 | BREACH DETECTED ⚡ ", "color: #0ff; background: #000; font-weight: bold; font-size: 16px;");
+
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            pixelArt: true,
+            scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+            backgroundColor: '#050505',
+            scene: { preload: preload, create: create, update: update }
+        };
+
+        const game = new Phaser.Game(config);
+        
+        // State Management
+        let wins = parseInt(localStorage.getItem('neon_wins')) || 0;
+        let playerHP = 100;
+        let enemyHP = 100;
+        let isPlayerTurn = true;
+
+        function preload() {
+            // Loading your specific assets
+            this.load.image('bg', 'assets.png'); 
+            this.load.image('hero_icon', 'favicon.png');
+        }
+
+        function create() {
+            // Background & Atmosphere
+            let bg = this.add.image(400, 300, 'bg').setAlpha(0.25);
+            
+            // Header Stats
+            this.add.text(20, 20, `SUCCESSFUL BREACHES: ${wins}`, { fontSize: '16px', fill: '#0ff' });
+            this.statusText = this.add.text(400, 80, 'SYSTEM: STANDBY', { fontSize: '32px', fill: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+
+            // Health Bars
+            this.playerBar = this.add.rectangle(200, 150, 250, 10, 0x00ff00);
+            this.enemyBar = this.add.rectangle(600, 150, 250, 10, 0xff0000);
+            this.add.text(80, 130, 'USER.EXE', { fontSize: '14px', fill: '#0f0' });
+            this.add.text(520, 130, 'GLITCH.BAT', { fontSize: '14px', fill: '#f00' });
+
+            // Card Deck Architecture
+            const cards = [
+                { name: 'STRIKE', color: 0xff0055, power: 18, desc: 'Direct Attack' },
+                { name: 'REBOOT', color: 0x00d4ff, power: -25, desc: 'Heal System' },
+                { name: 'OVERLOAD', color: 0xccff00, power: 45, desc: 'High Recoil' }
+            ];
+
+            cards.forEach((card, i) => {
+                let container = this.add.container(200 + (i * 200), 450);
+                let bg = this.add.rectangle(0, 0, 170, 230, 0x111111).setInteractive().setStrokeStyle(2, card.color);
+                let txt = this.add.text(-60, -90, card.name, { fontSize: '22px', fill: '#fff', fontStyle: 'bold' });
+                let sub = this.add.text(-60, 20, card.desc, { fontSize: '14px', fill: '#888' });
+                
+                container.add([bg, txt, sub]);
+
+                bg.on('pointerover', () => { bg.setStrokeStyle(4, 0xffffff); container.y -= 10; });
+                bg.on('pointerout', () => { bg.setStrokeStyle(2, card.color); container.y += 10; });
+                
+                bg.on('pointerdown', () => {
+                    if(isPlayerTurn) handleCombat(this, card);
+                });
+            });
+        }
+
+        function handleCombat(scene, card) {
+            isPlayerTurn = false;
+            scene.statusText.setText('EXECUTING...');
+
+            // Logic Switch
+            if(card.name === 'REBOOT') playerHP = Math.min(100, playerHP + 25);
+            else if(card.name === 'OVERLOAD') { enemyHP -= 45; playerHP -= 15; }
+            else { enemyHP -= card.power; }
+
+            updateUI(scene);
+            scene.cameras.main.shake(150, 0.005);
+
+            if(enemyHP <= 0) return triggerEnd(scene, 'WIN');
+
+            // Enemy Response
+            setTimeout(() => {
+                scene.statusText.setText('INCOMING ATTACK');
+                scene.cameras.main.flash(200, 100, 0, 0);
+                playerHP -= 15;
+                updateUI(scene);
+                if(playerHP <= 0) return triggerEnd(scene, 'LOSE');
+                isPlayerTurn = true;
+                scene.statusText.setText('YOUR TURN');
+            }, 1000);
+        }
+
+        function updateUI(scene) {
+            scene.playerBar.width = (playerHP / 100) * 250;
+            scene.enemyBar.width = (enemyHP / 100) * 250;
+        }
+
+        function triggerEnd(scene, result) {
+            if(result === 'WIN') { wins++; localStorage.setItem('neon_wins', wins); }
+            
+            const overlay = scene.add.rectangle(400, 300, 800, 600, 0x000000, 0.85);
+            scene.add.text(400, 250, result === 'WIN' ? 'BREACH SUCCESS' : 'SYSTEM CRASH', { 
+                fontSize: '52px', fill: result === 'WIN' ? '#0ff' : '#f00', fontStyle: 'bold' 
+            }).setOrigin(0.5);
+
+            const btn = scene.add.rectangle(400, 380, 220, 50, 0x222222).setInteractive().setStrokeStyle(2, 0x0ff);
+            scene.add.text(400, 380, 'REINITIALIZE', { fontSize: '20px', fill: '#0ff' }).setOrigin(0.5);
+            btn.on('pointerdown', () => window.location.reload());
+        }
+
+        function update() {}
+    </script>
+</body>
+</html>
