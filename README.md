@@ -12,4 +12,5 @@ A high-stakes, synthwave roguelike deck-builder built in a **3-hour AI Sprint**.
 - **Intelligence:** Gemini 3 Flash (Multi-Role Expert Team)
 - **Persistence:** LocalStorage API
 
-**[Play the Live Breach Here](https://YOUR-USERNAME.github.io/YOUR-REPO-NAME/)**
+
+**[Play the Live Breach Here](https://abosaad55555555-afk.github.io/game/)
